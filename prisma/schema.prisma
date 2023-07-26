@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  firstName    String
+  lastName     String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Dish {
+  id            String   @id @default(uuid())
+  name          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  DeliveryPlans DeliveryPlan[]
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  street    String
+  city      String
+  state     String
+  zip       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Stores    Store[]
+}
+
+model Store {
+  id            String         @id @default(uuid())
+  name          String
+  address       Address        @relation(fields: [addressId], references: [id])
+  addressId     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  DeliveryPlans DeliveryPlan[]
+  Invoices      Invoice[]
+}
+
+model Invoice {
+  id            String       @id @default(uuid())
+  billingMonth  BillingMonth @relation(fields: [billingMonthId], references: [id])
+  billingMonthId String
+  store         Store        @relation(fields: [storeId], references: [id])
+  storeId       String
+  total         Int
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model BillingMonth {
+  id          String      @id @default(uuid())
+  startDate   DateTime
+  endDate     DateTime
+  WorkWeeks   WorkWeek[]
+  Invoices    Invoice[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model DeliveryPlan {
+  id          String   @id @default(uuid())
+  store       Store  @relation(fields: [storeId], references: [id])
+  storeId     String
+  dish        Dish  @relation(fields: [dishId], references: [id])
+  dishId      String
+  price       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Deliveries  Delivery[]
+  Returns     Return[]
+}
+
+model Delivery {
+  id              String        @id @default(uuid())
+  deliveryPlan    DeliveryPlan  @relation(fields: [deliveryPlanId], references: [id])
+  deliveryPlanId  String
+  deliveryDate    DateTime
+  workWeek        WorkWeek      @relation(fields: [workWeekId], references: [id])
+  workWeekId      String
+  quantity        Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Return {
+  id              String        @id @default(uuid())
+  deliveryPlan    DeliveryPlan  @relation(fields: [deliveryPlanId], references: [id])
+  deliveryPlanId  String
+  workWeek        WorkWeek      @relation(fields: [workWeekId], references: [id])
+  workWeekId      String
+  returnDate      DateTime
+  quantity        Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model WorkWeek {
+  id            String       @id @default(uuid())
+  startDate     DateTime
+  endDate       DateTime
+  Deliveries    Delivery[]
+  Returns       Return[]
+  billingMonth  BillingMonth @relation(fields: [billingMonthId], references: [id])
+  billingMonthId String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
